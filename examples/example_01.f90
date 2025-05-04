@@ -1,11 +1,10 @@
 program main
-   use quadtree_class, only: QuadtreeNode, NUM_SUBNODES
+   use quadtree_class, only: QuadtreeNode
    use precision,      only: WP
    implicit none
 
    real(WP), dimension(6) :: xs, ys
    type(QuadtreeNode) :: root
-   integer :: i
 
    !     y
    ! 1.0 +--------+--------+
@@ -24,7 +23,7 @@ program main
 
    xs = [0.1_WP, 0.1_WP, 0.9_WP, 0.9_WP, 0.2_WP, 0.2_WP]
    ys = [0.1_WP, 0.9_WP, 0.1_WP, 0.9_WP, 0.8_WP, 0.2_WP]
-   root = QuadtreeNode(0.0_WP, 0.0_WP, 1.0_WP, 1.0_WP)
+   root = QuadtreeNode(0.0_WP, 0.0_WP, 1.0_WP, 1.0_WP, 4)
 
    call root%add_point(1, xs, ys)
    call root%add_point(2, xs, ys)
@@ -52,15 +51,6 @@ program main
    print *
 
 
-   print "('Root node:')"
-   call root%print()
-   print "('------------------------------------------------------------')"
-
-   if (.not.root%is_leaf) then
-      do i=1,NUM_SUBNODES
-         print "('Sub-node ',I1,':')", i
-         call root%nodes(i)%print()
-         print "('------------------------------------------------------------')"
-      end do
-   end if
+   print "('Quadtree:')"
+   call root%print(recursive=.true.)
 end program main

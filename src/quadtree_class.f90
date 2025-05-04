@@ -9,13 +9,16 @@ module quadtree_class
    public :: QuadtreeNode
 
    type :: QuadtreeNode
+      ! Common node state
       real(WP) :: x_min, y_min, dx, dy
-      integer :: num_points_per_leaf
-
       logical :: is_leaf
+
+      ! Data in case of a leaf node
       integer :: size
+      integer :: num_points_per_leaf
       integer, dimension(:), allocatable :: idxs
 
+      ! Data in case of non-leaf node
       type(QuadtreeNode), dimension(:), allocatable :: nodes
 
    contains
@@ -23,6 +26,8 @@ module quadtree_class
       procedure, public :: add_point
       procedure, public :: print => print_node
       procedure, public :: contains => node_contains
+      procedure, public :: find => node_find
+      procedure, public :: circle_intersects => circle_intersects_node
 
       procedure, private :: split => split_node
       procedure, private :: get_subnode_idx => get_subnode_idx
@@ -124,6 +129,102 @@ contains
       deallocate(this%idxs)
    end subroutine split_node
 
+   ! -----------------------------------------------------------------------------------------------
+   pure function node_contains(this, x, y) result(res)
+      class(QuadtreeNode), intent(in) :: this
+      real(WP), intent(in) :: x, y
+      logical :: res
+      
+      res = x.ge.this%x_min           .and. &
+          & x.le.this%x_min + this%dx .and. &
+          & y.ge.this%y_min           .and. &
+          & y.le.this%y_min + this%dy
+   end function node_contains
+
+   ! -----------------------------------------------------------------------------------------------
+   pure function get_subnode_idx(this, x, y) result(idx)
+      class(QuadtreeNode), intent(in) :: this
+      real(WP), intent(in) :: x, y
+      real(WP) :: x_split, y_split
+      integer :: idx
+
+      x_split = this%x_min + 0.5_WP * this%dx
+      y_split = this%y_min + 0.5_WP * this%dy
+      idx = merge(2, 0, y.gt.y_split) + merge(1, 0, x.gt.x_split) + 1
+   end function get_subnode_idx
+
+   ! -----------------------------------------------------------------------------------------------
+   recursive subroutine node_find(this, xc, yc, radius, xs, ys, num_found, found)
+      class(QuadtreeNode), intent(in) :: this
+      real(WP), intent(in) :: xc, yc, radius          ! Circle in which the elements are found
+      real(WP), dimension(:), intent(in) :: xs, ys
+      integer, intent(inout) :: num_found
+      integer, dimension(:), intent(inout) :: found
+      integer :: i, idx
+
+      
+      if (this%is_leaf) then 
+         if (this%circle_intersects(xc, yc, radius)) then
+            do i=1,this%size
+               idx = this%idxs(i)
+               if ( ((xs(idx) - xc)**2 + (ys(idx) - yc)**2) .le. radius**2 ) then
+                  call append_to_array(num_found, found, idx)
+               end if
+            end do
+         end if
+      else 
+         do i=1,NUM_SUBNODES
+            call this%nodes(i)%find(xc, yc, radius, xs, ys, num_found, found)
+         end do
+      end if
+   end subroutine node_find
+
+   ! -----------------------------------------------------------------------------------------------
+   subroutine append_to_array(count, array, element)
+      integer, intent(inout) :: count
+      integer, dimension(:), intent(inout) :: array
+      integer, intent(in) :: element
+
+      if (count.ge.size(array)) then
+         write (error_unit, "('ERROR: Cannot append into array with size ',I5,', are at max capacity')") size(array)
+         error stop
+      end if
+
+      count = count + 1
+      array(count) = element
+   end subroutine append_to_array
+
+   ! -----------------------------------------------------------------------------------------------
+   pure function circle_intersects_node(this, xc, yc, radius) result(intersects)
+      class(QuadtreeNode), intent(in) :: this
+      real(WP), intent(in) :: xc, yc, radius
+      logical :: intersects
+
+      real(WP) :: tmp_x, tmp_y
+
+      if (xc.lt.this%x_min) then 
+         tmp_x = this%x_min
+      else if (xc.gt.this%x_min + this%dx) then
+         tmp_x = this%x_min + this%dx
+      else
+         tmp_x = xc
+      end if
+
+      if (yc.lt.this%y_min) then 
+         tmp_y = this%y_min
+      else if (yc.gt.this%y_min + this%dy) then
+         tmp_y = this%y_min + this%dy
+      else
+         tmp_y = yc
+      end if
+
+      tmp_x = tmp_x - xc
+      tmp_y = tmp_y - yc
+
+      intersects = (tmp_x**2 + tmp_y**2 ).le.radius**2;
+   end function circle_intersects_node
+
+   ! -----------------------------------------------------------------------------------------------
    subroutine print_node(this, recursive)
       class(QuadtreeNode), intent(in) :: this
       logical, intent(in), optional :: recursive
@@ -142,6 +243,7 @@ contains
       character(128) :: fmt_str
       integer :: i
 
+      ! TODO: Require an indent of at least 1, otherwise the formatting breaks
       if (recursive) then
          write (fmt_str, "('(',I3,'X,',A,')')") indent, "'------------------------'"; print fmt_str
       end if
@@ -161,27 +263,5 @@ contains
          end do
       end if
    end subroutine print_node_impl
-
-   pure function node_contains(this, x, y) result(res)
-      class(QuadtreeNode), intent(in) :: this
-      real(WP), intent(in) :: x, y
-      logical :: res
-      
-      res = x.ge.this%x_min           .and. &
-          & x.le.this%x_min + this%dx .and. &
-          & y.ge.this%y_min           .and. &
-          & y.le.this%y_min + this%dy
-   end function node_contains
-
-   pure function get_subnode_idx(this, x, y) result(idx)
-      class(QuadtreeNode), intent(in) :: this
-      real(WP), intent(in) :: x, y
-      real(WP) :: x_split, y_split
-      integer :: idx
-
-      x_split = this%x_min + 0.5_WP * this%dx
-      y_split = this%y_min + 0.5_WP * this%dy
-      idx = merge(2, 0, y.gt.y_split) + merge(1, 0, x.gt.x_split) + 1
-   end function get_subnode_idx
 
 end module quadtree_class

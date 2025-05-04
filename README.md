@@ -6,4 +6,5 @@
 ```console
 $ make
 $ ./build/example_01
+$ ./build/example_02
 ```

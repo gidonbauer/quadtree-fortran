@@ -5,5 +5,5 @@
 
 ```console
 $ make
-$ ./main
+$ ./build/example_01
 ```

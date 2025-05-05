@@ -7,6 +7,7 @@ module quadtree_class
    integer, parameter, public :: NUM_SUBNODES = 4
 
    public :: QuadtreeNode
+   ! public :: destruct_node
 
    type :: QuadtreeNode
       ! Common node state
@@ -61,6 +62,22 @@ contains
       self%size = 0
       allocate(self%idxs(NUM_POINTS_PER_LEAF))
    end function construct_leaf
+
+   ! -----------------------------------------------------------------------------------------------
+   ! TODO: Is this necessary to avoid memory leaks?
+   ! recursive subroutine destruct_node(this)
+   !    type(QuadtreeNode) :: this
+   !    integer :: i
+
+   !    if (this%is_leaf) then
+   !       deallocate(this%idxs)
+   !    else
+   !       do i=1,NUM_SUBNODES
+   !          call destruct_node(this%nodes(i))
+   !       end do
+   !       deallocate(this%nodes)
+   !    end if
+   ! end subroutine destruct_node
 
    ! -----------------------------------------------------------------------------------------------
    recursive subroutine add_point(this, idx, xs, ys)
@@ -254,7 +271,8 @@ contains
       write (fmt_str, "('(',I3,'X,',A,')')") indent, "'is_leaf = ',L1";     print fmt_str, this%is_leaf
 
       if (this%is_leaf) then
-         write (fmt_str, "('(',I3,'X,',A,')')") indent, "'size    = ',I5,' ('I5')'"; print fmt_str, this%size, this%num_points_per_leaf
+         write (fmt_str, "('(',I3,'X,',A,')')") indent, "'size    = ',I5,' ('I5')'"
+         print fmt_str, this%size, this%num_points_per_leaf
          write (fmt_str, "('(',I3,'X,',A,')')") indent, "'idxs    = ',*(I5,', ')"
          print fmt_str, this%idxs(:this%size)
       else if (recursive) then

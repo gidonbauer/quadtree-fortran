@@ -181,17 +181,17 @@ contains
 
       
       if (this%is_leaf) then 
-         if (this%circle_intersects(xc, yc, radius)) then
-            do i=1,this%size
-               idx = this%idxs(i)
-               if ( ((xs(idx) - xc)**2 + (ys(idx) - yc)**2) .le. radius**2 ) then
-                  call append_to_array(num_found, found, idx)
-               end if
-            end do
-         end if
+         do i=1,this%size
+            idx = this%idxs(i)
+            if (((xs(idx) - xc)**2 + (ys(idx) - yc)**2) .le. radius**2) then
+               call append_to_array(num_found, found, idx)
+            end if
+         end do
       else 
          do i=1,NUM_SUBNODES
-            call this%nodes(i)%find(xc, yc, radius, xs, ys, num_found, found)
+            if (this%nodes(i)%circle_intersects(xc, yc, radius)) then
+               call this%nodes(i)%find(xc, yc, radius, xs, ys, num_found, found)
+            end if
          end do
       end if
    end subroutine node_find

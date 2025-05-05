@@ -7,13 +7,27 @@ EXECUTABLES = ${addprefix ./build/, ${basename ${EXAMPLES}}}
 
 BASENAME_FC = ${notdir ${FC}}
 ifeq (${BASENAME_FC}, gfortran)
-	F_FLAGS = -Wall -Wextra -pedantic -Wconversion -Wshadow -std=f2023
+	F_FLAGS = -Wall -Wextra -pedantic -Wconversion -Wshadow -std=f2018
 	F_FLAGS_RELEASE = -march=native -O3 -ffast-math -fstack-arrays
-	F_FLAGS_DEBUG = -O0 -g -fcheck=all -fsanitize=leak
+	F_FLAGS_DEBUG = -O0 -g -fcheck=all # -fsanitize=address,leak,undefined
+	MODULE_FLAG = -J./build/
 else ifeq (${BASENAME_FC}, ${filter ${BASENAME_FC}, flang flang-new flang-20})
 	F_FLAGS = -pedantic -std=f2018
 	F_FLAGS_RELEASE = -march=native -mtune=native -O3 -ffast-math
 	F_FLAGS_DEBUG = -O0 -g
+	MODULE_FLAG = -J./build/
+else ifeq (${BASENAME_FC}, ${filter ${BASENAME_FC}, ifort ifx})
+	F_FLAGS = -warn all -std=f2018
+	F_FLAGS_RELEASE = -march=native -O3 -ffast-math -fstack-arrays
+	F_FLAGS_DEBUG = -O0 -g # -fsanitize=address,leak,undefined
+	MODULE_FLAG = -module ./build/
+else ifeq (${BASENAME_FC}, nvfortran)
+	F_FLAGS = -Wall -Wextra -std=f2018
+	F_FLAGS_RELEASE = -O4 -march=native -mtune=native -fast -Mstack_arrays -stdpar=gpu -Minfo=accel
+	F_FLAGS_DEBUG = -O0 -g -C -Mstandard
+	MODULE_FLAG = -module ./build/
+else
+  ${error "Unknown fortran compiler `${FC}`"}
 endif
 
 release: F_FLAGS += ${F_FLAGS_RELEASE}
@@ -32,7 +46,7 @@ ${LIBRARY}: ${OBJ_FILES}
 
 # Build object files for library
 build/%.o: src/%.f90 build
-	${FC} ${F_FLAGS} -I./build/ -J./build/ -c -o $@ $<
+	${FC} ${F_FLAGS} -I./build/ ${MODULE_FLAG} -c -o $@ $<
 
 # Create build directory
 build:

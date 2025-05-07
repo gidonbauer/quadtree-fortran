@@ -9,7 +9,7 @@ BASENAME_FC = ${notdir ${FC}}
 ifeq (${BASENAME_FC}, gfortran)
 	F_FLAGS = -Wall -Wextra -pedantic -Wconversion -Wshadow -std=f2018
 	F_FLAGS_RELEASE = -march=native -O3 -ffast-math -fstack-arrays
-	F_FLAGS_DEBUG = -O0 -g -fcheck=all # -fsanitize=address,leak,undefined
+	F_FLAGS_DEBUG = -O0 -g -fcheck=all# -fsanitize=address,leak,undefined
 	MODULE_FLAG = -J./build/
 else ifeq (${BASENAME_FC}, ${filter ${BASENAME_FC}, flang flang-new flang-20})
 	F_FLAGS = -pedantic -std=f2018
@@ -22,7 +22,7 @@ else ifeq (${BASENAME_FC}, ${filter ${BASENAME_FC}, ifort ifx})
 	F_FLAGS_DEBUG = -O0 -g # -fsanitize=address,leak,undefined
 	MODULE_FLAG = -module ./build/
 else ifeq (${BASENAME_FC}, nvfortran)
-	F_FLAGS = -Wall -Wextra -std=f2018
+	F_FLAGS = -Wall -Wextra# -std=f2018
 	F_FLAGS_RELEASE = -O4 -march=native -mtune=native -fast -Mstack_arrays -stdpar=gpu -Minfo=accel
 	F_FLAGS_DEBUG = -O0 -g -C -Mstandard
 	MODULE_FLAG = -module ./build/

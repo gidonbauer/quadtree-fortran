@@ -48,5 +48,6 @@ program main
    end do
 
    call destruct_node(root)
+   deallocate(xs, ys, qtree_data, found)     ! Do this to make valgrind happy, I believe this is not necessary
 
 end program main

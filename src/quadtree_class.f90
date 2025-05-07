@@ -6,8 +6,7 @@ module quadtree_class
 
    integer, parameter, public :: NUM_SUBNODES = 4
 
-   public :: QuadtreeNode
-   ! public :: destruct_node
+   public :: QuadtreeNode, construct_node, destruct_node
 
    type :: QuadtreeNode
       ! Common node state
@@ -35,22 +34,18 @@ module quadtree_class
 
    end type QuadtreeNode
 
-   interface QuadtreeNode
-      module procedure construct_leaf
-   end interface QuadtreeNode
-
 contains
 
    ! -----------------------------------------------------------------------------------------------
-   function construct_leaf(x_min, y_min, dx, dy, num_points_per_leaf) result(self)
-      type(QuadtreeNode) :: self
+   subroutine construct_node(self, x_min, y_min, dx, dy, num_points_per_leaf)
+      type(QuadtreeNode), intent(out) :: self
       real(WP), intent(in) :: x_min, y_min, dx, dy
       integer, intent(in) :: num_points_per_leaf
 
       self%x_min = x_min
       self%y_min = y_min
-      self%dx = dx
-      self%dy = dy
+      self%dx    = dx
+      self%dy    = dy
 
       if (num_points_per_leaf.le.0) then
          write (error_unit, "('num_points_per_leaf must be greater than 0 but is ',I5)") num_points_per_leaf
@@ -59,25 +54,24 @@ contains
       self%num_points_per_leaf = num_points_per_leaf
 
       self%is_leaf = .true.
-      self%size = 0
-      allocate(self%idxs(NUM_POINTS_PER_LEAF))
-   end function construct_leaf
+      self%size    = 0
+      allocate(self%idxs(self%num_points_per_leaf))
+   end subroutine construct_node
 
    ! -----------------------------------------------------------------------------------------------
-   ! TODO: Is this necessary to avoid memory leaks?
-   ! recursive subroutine destruct_node(this)
-   !    type(QuadtreeNode) :: this
-   !    integer :: i
+   recursive subroutine destruct_node(this)
+      type(QuadtreeNode) :: this
+      integer :: i
 
-   !    if (this%is_leaf) then
-   !       deallocate(this%idxs)
-   !    else
-   !       do i=1,NUM_SUBNODES
-   !          call destruct_node(this%nodes(i))
-   !       end do
-   !       deallocate(this%nodes)
-   !    end if
-   ! end subroutine destruct_node
+      if (this%is_leaf) then
+         deallocate(this%idxs)
+      else
+         do i=1,NUM_SUBNODES
+            call destruct_node(this%nodes(i))
+         end do
+         deallocate(this%nodes)
+      end if
+   end subroutine destruct_node
 
    ! -----------------------------------------------------------------------------------------------
    recursive subroutine add_point(this, idx, xs, ys)
@@ -129,13 +123,13 @@ contains
       allocate(this%nodes(NUM_SUBNODES))
       
       ! Bottom-left
-      this%nodes(1) = QuadtreeNode(this%x_min, this%y_min, half_dx, half_dy, this%num_points_per_leaf)
+      call construct_node(this%nodes(1), this%x_min, this%y_min, half_dx, half_dy, this%num_points_per_leaf)
       ! Bottom-right
-      this%nodes(2) = QuadtreeNode(x_split,    this%y_min, half_dx, half_dy, this%num_points_per_leaf)
+      call construct_node(this%nodes(2), x_split,    this%y_min, half_dx, half_dy, this%num_points_per_leaf)
       ! Top-left
-      this%nodes(3) = QuadtreeNode(this%x_min, y_split,    half_dx, half_dy, this%num_points_per_leaf)
+      call construct_node(this%nodes(3), this%x_min, y_split,    half_dx, half_dy, this%num_points_per_leaf)
       ! Top-left
-      this%nodes(4) = QuadtreeNode(x_split,    y_split,    half_dx, half_dy, this%num_points_per_leaf)
+      call construct_node(this%nodes(4), x_split,    y_split,    half_dx, half_dy, this%num_points_per_leaf)
 
       ! Clean up the contained indices
       this%is_leaf = .false.

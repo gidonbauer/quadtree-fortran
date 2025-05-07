@@ -1,5 +1,5 @@
 program main
-   use quadtree_class, only: QuadtreeNode
+   use quadtree_class, only: QuadtreeNode, construct_node, destruct_node
    use precision,      only: WP
    implicit none
 
@@ -23,7 +23,7 @@ program main
 
    xs = [0.1_WP, 0.1_WP, 0.9_WP, 0.9_WP, 0.2_WP, 0.2_WP]
    ys = [0.1_WP, 0.9_WP, 0.1_WP, 0.9_WP, 0.8_WP, 0.2_WP]
-   root = QuadtreeNode(0.0_WP, 0.0_WP, 1.0_WP, 1.0_WP, 4)
+   call construct_node(root, 0.0_WP, 0.0_WP, 1.0_WP, 1.0_WP, 4)
 
    call root%add_point(1, xs, ys)
    call root%add_point(2, xs, ys)
@@ -53,4 +53,6 @@ program main
 
    print "('Quadtree:')"
    call root%print(recursive=.true.)
+
+   call destruct_node(root)
 end program main

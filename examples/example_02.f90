@@ -1,5 +1,5 @@
 program main
-   use quadtree_class, only: QuadtreeNode
+   use quadtree_class, only: QuadtreeNode, construct_node, destruct_node
    use precision,      only: WP
    implicit none
 
@@ -17,7 +17,7 @@ program main
    allocate(ys(N**2))
    allocate(qtree_data(N**2, 2))
 
-   root = QuadtreeNode(x_min=0.0_WP, y_min=0.0_WP, dx=real(N, WP), dy=real(N, WP), num_points_per_leaf=10)
+   call construct_node(root, 0.0_WP, 0.0_WP, real(N, WP), real(N, WP), 10)
 
    do i=1,N
       do j=1,N
@@ -46,5 +46,7 @@ program main
    do i=1,num_found
       print "(I3,' => (',F3.1,', ',F3.1,')')", found(i), xs(found(i)), ys(found(i))
    end do
+
+   call destruct_node(root)
 
 end program main

@@ -265,7 +265,7 @@ contains
       write (fmt_str, "('(',I3,'X,',A,')')") indent, "'is_leaf = ',L1";     print fmt_str, this%is_leaf
 
       if (this%is_leaf) then
-         write (fmt_str, "('(',I3,'X,',A,')')") indent, "'size    = ',I5,' ('I5')'"
+         write (fmt_str, "('(',I3,'X,',A,')')") indent, "'size    = ',I5,' (',I5,')'"
          print fmt_str, this%size, this%num_points_per_leaf
          write (fmt_str, "('(',I3,'X,',A,')')") indent, "'idxs    = ',*(I5,', ')"
          print fmt_str, this%idxs(:this%size)

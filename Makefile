@@ -45,7 +45,10 @@ ${LIBRARY}: ${OBJ_FILES}
 	${AR} -rsc $@ $^
 
 # Build object files for library
-build/%.o: src/%.f90 build
+build/precision.o: src/precision.f90 build
+	${FC} ${F_FLAGS} -I./build/ ${MODULE_FLAG} -c -o $@ $<
+
+build/quadtree_class.o: src/quadtree_class.f90 build/precision.o build
 	${FC} ${F_FLAGS} -I./build/ ${MODULE_FLAG} -c -o $@ $<
 
 # Create build directory
